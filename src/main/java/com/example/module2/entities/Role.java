@@ -1,9 +1,5 @@
 package com.example.module2.entities;
-
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
-
 import javax.persistence.*;
 import java.util.List;
 
@@ -11,6 +7,7 @@ import java.util.List;
 @Table(name = "roles")
 public class Role extends BaseEntity implements GrantedAuthority {
 
+    @Column(unique=true)
     private String name;
     private List<User> users;
 
@@ -18,15 +15,9 @@ public class Role extends BaseEntity implements GrantedAuthority {
         this.name = name;
     }
     public Role() {
-
     }
 
-    @ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "users_roles",
-            joinColumns = @JoinColumn(name = "role_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id")
-    )
+    @ManyToMany(mappedBy = "roles")
     public List<User> getUsers() {
         return users;
     }
@@ -52,5 +43,10 @@ public class Role extends BaseEntity implements GrantedAuthority {
     @Transient
     public String getAuthority() {
         return this.name;
+    }
+
+    @Override
+    public void setId(int id) {
+        super.setId(id);
     }
 }

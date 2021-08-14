@@ -16,5 +16,5 @@ public interface RoleRepository extends JpaRepository<Role, Integer> {
     Role findByName(String name);
 
     @Query("select r from Role r join r.users u where u.email = :email")
-    Set<Role> findByUserId(@Param("email")String email);
+    Set<Role> findRolesByUserEmail(@Param("email")String email);
 }

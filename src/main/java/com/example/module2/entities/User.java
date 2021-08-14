@@ -14,13 +14,14 @@ import java.util.Set;
 @Table(name = "users")
 @NoArgsConstructor
 @AllArgsConstructor
-public class User extends BaseEntity implements UserDetails {
+public class User extends BaseEntity {
 
     private String firstName;
     private String lastName;
     private String email;
     private String password;
     private Set<Role> roles;
+    private Set<Appointment> appointments;
 
     @Column
     public String getFirstName() {
@@ -40,7 +41,7 @@ public class User extends BaseEntity implements UserDetails {
         this.lastName = lastName;
     }
 
-    @Column
+    @Column(unique = true, nullable = false)
     public String getEmail() {
         return email;
     }
@@ -49,51 +50,18 @@ public class User extends BaseEntity implements UserDetails {
         this.email = email;
     }
 
-    @Override
     @Transient
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Collection<GrantedAuthority> authorities = new HashSet<>();
-        //Collection<Role> roles = user.getRoles();
         for (Role role : roles) {
             authorities.add(new SimpleGrantedAuthority(role.getName()));
         }
         return authorities;
     }
 
-
     @Column
     public String getPassword() {
         return password;
-    }
-
-
-    @Transient@Override
-    public String getUsername() {
-        return this.email;
-    }
-
-    @Override
-    @Transient
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    @Transient
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    @Transient
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    @Transient
-    public boolean isEnabled() {
-        return true;
     }
 
     public void setPassword(String password) {
@@ -106,8 +74,13 @@ public class User extends BaseEntity implements UserDetails {
         return super.getId();
     }
 
-    @Column
-    @ManyToMany(mappedBy = "users")
+    @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "users_roles",
+            joinColumns = @JoinColumn(
+                    name = "user_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(
+                    name = "role_id", referencedColumnName = "id"))
     public Set<Role> getRoles() {
         return roles;
     }
@@ -116,7 +89,18 @@ public class User extends BaseEntity implements UserDetails {
         this.roles = roles;
     }
 
-    public void addRole(Role role) {
-        this.roles.add(role);
+    @Override
+    public void setId(int id) {
+        super.setId(id);
+    }
+
+
+    @OneToMany(mappedBy = "user")
+    public Set<Appointment> getAppointments() {
+        return appointments;
+    }
+
+    public void setAppointments(Set<Appointment> appointments) {
+        this.appointments = appointments;
     }
 }

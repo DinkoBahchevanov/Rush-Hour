@@ -47,13 +47,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         CustomAuthenticationFilter customAuthenticationFilter = new CustomAuthenticationFilter(authenticationManagerBean(), userService, roleService);
-        customAuthenticationFilter.setFilterProcessesUrl("/authenticate");
+        customAuthenticationFilter.setFilterProcessesUrl("/api/authenticate");
         http.csrf().disable();
         http.sessionManagement().sessionCreationPolicy(STATELESS);
-        http.authorizeRequests().antMatchers(POST, "/api/users","/authenticate").permitAll();
+        http.authorizeRequests().antMatchers(POST, "/api/users","/api/authenticate").permitAll();
+        http.authorizeRequests().antMatchers(POST, "/api/appointments").permitAll();
         http.authorizeRequests().antMatchers(GET, "/api/users").hasAuthority("ROLE_ADMIN");
         http.authorizeRequests().antMatchers(DELETE, "/api/users").hasAuthority("ROLE_ADMIN");
         http.authorizeRequests().antMatchers("/api/users/**").authenticated();
+        http.authorizeRequests().antMatchers(POST,"/api/activities/**").authenticated();
+        http.authorizeRequests().antMatchers("/api/activities/**").hasAuthority("ROLE_ADMIN");
         http.addFilter(customAuthenticationFilter);
         http.addFilterBefore(new CustomAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
     }

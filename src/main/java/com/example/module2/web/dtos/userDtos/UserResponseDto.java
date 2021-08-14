@@ -1,4 +1,4 @@
-package com.example.module2.web.dtos;
+package com.example.module2.web.dtos.userDtos;
 
 public class UserResponseDto {
 

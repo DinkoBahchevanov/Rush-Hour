@@ -10,7 +10,7 @@ public interface RoleService {
 
     Set<Role> getAllRoles();
 
-    Role getRoleByName(String name);
-
     Set<Role> getRolesByUserEmail(String email);
+
+    Role getRoleByName(String name);
 }

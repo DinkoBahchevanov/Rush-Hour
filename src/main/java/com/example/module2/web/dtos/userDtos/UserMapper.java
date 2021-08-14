@@ -1,9 +1,11 @@
-package com.example.module2.web.dtos;
+package com.example.module2.web.dtos.userDtos;
 
 import com.example.module2.entities.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
+
+import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface UserMapper {
@@ -13,7 +15,7 @@ public interface UserMapper {
             @Mapping(target="lastName", source="userRequestDto.lastName"),
             @Mapping(target="email", source="userRequestDto.email"),
             @Mapping(target="password", source="userRequestDto.password"),
-            @Mapping(target = "roles", ignore = true)
+            @Mapping(target = "roles")
     })
     User mapUserDtoToUser(UserRequestDto userRequestDto);
 
@@ -24,4 +26,6 @@ public interface UserMapper {
             @Mapping(target="email", source="user.email"),
     })
     UserResponseDto mapUserToUserDto(User user);
+
+    List<UserResponseDto> mapUserListToUserResponseDtoList(List<User> users);
 }

@@ -3,10 +3,7 @@ package com.example.module2.services;
 import com.example.module2.entities.Role;
 import com.example.module2.repositories.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -22,8 +19,9 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public void seedRolesIntoDB() {
-        this.roleRepository.saveAndFlush(new Role("ROLE_ADMIN"));
-        this.roleRepository.saveAndFlush(new Role("ROLE_USER"));
+        this.roleRepository.deleteAll();
+        this.roleRepository.save(new Role("ROLE_ADMIN"));
+        this.roleRepository.save(new Role("ROLE_USER"));
     }
 
     @Override
@@ -32,12 +30,12 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public Role getRoleByName(String name) {
-        return roleRepository.findByName(name);
+    public Set<Role> getRolesByUserEmail(String email) {
+        return roleRepository.findRolesByUserEmail(email);
     }
 
     @Override
-    public Set<Role> getRolesByUserEmail(String email) {
-        return roleRepository.findByUserId(email);
+    public Role getRoleByName(String name) {
+        return roleRepository.findByName(name);
     }
 }

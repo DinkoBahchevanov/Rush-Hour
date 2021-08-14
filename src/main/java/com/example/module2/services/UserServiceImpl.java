@@ -1,33 +1,28 @@
 package com.example.module2.services;
 
 import com.example.module2.entities.Role;
-import com.example.module2.repositories.RoleRepository;
-import com.example.module2.web.dtos.UserRequestDto;
-import com.example.module2.web.dtos.UserResponseDto;
-import com.example.module2.web.dtos.UserMapper;
+import com.example.module2.exceptions.users.AccessDeniedException;
+import com.example.module2.exceptions.users.EmailAlreadyExistsException;
+import com.example.module2.exceptions.users.UserNotFoundException;
+import com.example.module2.web.dtos.userDtos.UserRequestDto;
+import com.example.module2.web.dtos.userDtos.UserResponseDto;
+import com.example.module2.web.dtos.userDtos.UserMapper;
 import com.example.module2.entities.User;
 import com.example.module2.repositories.UserRepository;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import javax.transaction.Transactional;
 import java.util.*;
 
 @Service
-public class UserServiceImpl implements UserService, UserDetailsService {
+public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
     private final UserMapper userMapper;
     private final RoleService roleService;
     private final PasswordEncoder passwordEncoder;
@@ -35,9 +30,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private static final Logger LOGGER = LoggerFactory.getLogger(UserServiceImpl.class);
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, UserMapper userMapper, RoleService roleService, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, UserMapper userMapper,
+                           RoleService roleService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
         this.userMapper = userMapper;
         this.roleService = roleService;
         this.passwordEncoder = passwordEncoder;
@@ -45,64 +40,64 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     @Override
     public Set<UserResponseDto> getAllUsers() {
-        List<User> users = userRepository.findAll();
-        Set<UserResponseDto> userDtos = new HashSet<>();
-        for ( User user : users ) {
-            userDtos.add(userMapper.mapUserToUserDto(user));
-        }
-        return userDtos;
+        List<UserResponseDto> userDtos = userMapper.mapUserListToUserResponseDtoList(userRepository.findAll());
+        return new HashSet<>(userDtos);
     }
 
     @Override
     public UserResponseDto createUser(UserRequestDto createUserDto) {
         User user = userMapper.mapUserDtoToUser(createUserDto);
-        if (userRepository.count() == 0) {
-            roleService.seedRolesIntoDB();
-            user.setRoles(roleService.getAllRoles());
-            user.getRoles().forEach(role -> role.setUsers(Collections.singletonList(user)));
-        } else {
-            if (userRepository.findByEmail(user.getEmail()) != null) {
-                return null;
-            }
-            Set<Role> roles = new HashSet<>();
-            createUserDto.getRoles().forEach(role -> {
-               Role role1 =  roleRepository.findByName(role.getName());
-               roles.add(role1);
-            });
-            user.setRoles(roles);
-            user.getRoles().forEach(role -> role.getUsers().add(user));
+        user.setRoles(new HashSet<>());
+        for ( int i = 0; i < createUserDto.getRoles().size(); i++ ) {
+            Role role = roleService.getRoleByName(createUserDto.getRoles().get(0).getName());
+            user.getRoles().add(role);
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return userMapper.mapUserToUserDto(userRepository.save(user));
+        userRepository.save(user);
+        return userMapper.mapUserToUserDto(user);
     }
 
     @Override
-    public boolean deleteUserById(int id) {
+    public ResponseEntity<HttpStatus> deleteUserById(int id) {
         if (userRepository.findById(id).isPresent()) {
             userRepository.deleteById(id);
-            return true;
+            return new ResponseEntity<>(HttpStatus.OK);
         }
-        return false;
+        LOGGER.error(String.format("User with ID: %d - not found", id));
+        throw new UserNotFoundException(id);
     }
 
     @Override
-    public UserResponseDto updateUserById(int userId, UserRequestDto userDto) {
-        User user = userRepository.getById(userId);
+    public UserResponseDto updateUserById(int userId, String currentUserEmail, UserRequestDto userDto) throws UserNotFoundException {
+        Optional<User> user = userRepository.findById(userId);
         User uniqueUser = userRepository.findByEmail(userDto.getEmail());
+        User changer = userRepository.findByEmail(currentUserEmail);
 
-        if (user != null && uniqueUser == null) {
-            user = userMapper.mapUserDtoToUser(userDto);
-            user.setId(userId);
-            return userMapper.mapUserToUserDto(userRepository.save(user));
+        if (!user.isPresent()) {
+            LOGGER.error(String.format("User with ID: %d - not found", userId));
+            throw new UserNotFoundException(userId);
         }
-        return null;
-    }
 
-    @Override
-    public void addRoleToUser(String email, String roleName) {
-        User user = userRepository.findByEmail(email);
-        Role role = roleRepository.findByName(roleName);
-        user.getRoles().add(role);
+        if (uniqueUser != null) {
+            LOGGER.error(String.format("Email %s already exists", userDto.getEmail()));
+            throw new EmailAlreadyExistsException(userDto.getEmail());
+        }
+
+        if (changer.getRoles().stream().noneMatch(role -> role.getName().contains("ROLE_ADMIN"))
+                && user.get().getRoles().stream().anyMatch(role -> role.getName().contains("ROLE_ADMIN"))) {
+            LOGGER.error(String.format("Not enough rights for the user with id: %d", changer.getId()));
+            throw new AccessDeniedException();
+        }
+
+        if (changer.getRoles().stream().noneMatch(role -> role.getName().contains("ROLE_ADMIN"))
+                && user.get().getRoles().stream().noneMatch(role -> role.getName().contains("ROLE_ADMIN")) && changer.getId() != userId) {
+            LOGGER.error(String.format("Not enough rights for the user with id: %d", changer.getId()));
+            throw new AccessDeniedException();
+        }
+        user = Optional.ofNullable(userMapper.mapUserDtoToUser(userDto));
+        user.get().setId(userId);
+        user.get().setPassword(passwordEncoder.encode(user.get().getPassword()));
+        return userMapper.mapUserToUserDto(userRepository.save(user.get()));
     }
 
     @Override
@@ -111,24 +106,24 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email);
+    public UserResponseDto registerUser(UserRequestDto createUserDto) {
+        User user = userMapper.mapUserDtoToUser(createUserDto);
 
-        if (user == null) {
-            LOGGER.error("USER NOT FOUND BY EMAIL: " + email);
-            throw new UsernameNotFoundException("USER NOT FOUND BY EMAIL: " + email);
-        }else {
-            LOGGER.info("USER FOUND IN THE DATABASE WITH EMAIL: " + email);
-        }
-        return new org.springframework.security.core.userdetails.User(user.getEmail(), user.getPassword(), new ArrayList<>());
+        user.setRoles(Set.of(roleService.getRoleByName("ROLE_USER")));
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        userRepository.save(user);
+        return userMapper.mapUserToUserDto(user);
     }
 
-    public Collection<GrantedAuthority> getAuthorities(User user){
-        Collection<GrantedAuthority> authorities = new HashSet<>();
-        //Collection<Role> roles = user.getRoles();
-        for (Role role : user.getRoles()) {
-            authorities.add(new SimpleGrantedAuthority(role.getName()));
-        }
-        return authorities;
+    @Override
+    public void seedAdminToDB() {
+        User user = new User();
+        user.setFirstName("Dinko");
+        user.setLastName("Bahchevanov");
+        user.setEmail("dinko@abv.bg");
+        user.setPassword(passwordEncoder.encode("1234"));
+        user.setRoles(roleService.getAllRoles());
+        userRepository.save(user);
     }
 }

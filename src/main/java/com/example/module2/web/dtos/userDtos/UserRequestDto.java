@@ -1,17 +1,13 @@
-package com.example.module2.web.dtos;
+package com.example.module2.web.dtos.userDtos;
 
 import com.example.module2.entities.Role;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-import java.beans.Transient;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 @AllArgsConstructor
 @NoArgsConstructor
