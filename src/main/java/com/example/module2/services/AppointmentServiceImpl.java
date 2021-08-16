@@ -4,6 +4,7 @@ import com.example.module2.entities.Activity;
 import com.example.module2.entities.Appointment;
 import com.example.module2.entities.User;
 import com.example.module2.exceptions.appointments.AppointmentAlreadyMadeForChosenHourAndActivityException;
+import com.example.module2.exceptions.appointments.AppointmentNotFoundException;
 import com.example.module2.exceptions.appointments.InvalidAppointmentTimeException;
 import com.example.module2.exceptions.appointments.UserAlreadyBusyInThisPeriodOfTimeException;
 import com.example.module2.repositories.ActivityRepository;
@@ -12,14 +13,14 @@ import com.example.module2.repositories.UserRepository;
 import com.example.module2.web.dtos.appointmentDtos.AppointmentMapper;
 import com.example.module2.web.dtos.appointmentDtos.AppointmentRequestDto;
 import com.example.module2.web.dtos.appointmentDtos.AppointmentResponseDto;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import static java.util.stream.Collectors.toSet;
 
 @Service
 public class AppointmentServiceImpl implements AppointmentService{
@@ -29,7 +30,8 @@ public class AppointmentServiceImpl implements AppointmentService{
     private final ActivityRepository activityRepository;
     private final AppointmentMapper appointmentMapper;
 
-    public AppointmentServiceImpl(AppointmentRepository appointmentRepository, UserRepository userRepository, ActivityRepository activityRepository, AppointmentMapper appointmentMapper) {
+    public AppointmentServiceImpl(AppointmentRepository appointmentRepository, UserRepository userRepository,
+                                  ActivityRepository activityRepository, AppointmentMapper appointmentMapper) {
         this.appointmentRepository = appointmentRepository;
         this.userRepository = userRepository;
         this.activityRepository = activityRepository;
@@ -64,13 +66,9 @@ public class AppointmentServiceImpl implements AppointmentService{
                 throw new UserAlreadyBusyInThisPeriodOfTimeException(appointmentRequestDto.getUserEmail(), appointmentRequestDto.getStartDateAndTime());
             }
         }
-//        if (loggedUser.getAppointments().stream().anyMatch(userAppointment ->
-//                appointment.getStartDateAndTime().isAfter(userAppointment.getStartDateAndTime()) &&
-//                        appointment.getStartDateAndTime().isBefore(userAppointment.getEndDateAndTime()))) {
-//            throw new InvalidAppointmentTimeException(appointment.getStartDateAndTime(), LocalDateTime.now());
-//        }
 
         appointmentRepository.save(appointment);
+
         if (loggedUser.getAppointments().size() == 0) {
             loggedUser.setAppointments(new HashSet<>());
         }
@@ -100,5 +98,19 @@ public class AppointmentServiceImpl implements AppointmentService{
         }
 
         return new HashSet<>(responseDtoList);
+    }
+
+    @Override
+    public ResponseEntity<HttpStatus> deleteAppointmentById(int appointmentId) {
+        if (!appointmentRepository.findById(appointmentId).isPresent()) {
+            throw new AppointmentNotFoundException(appointmentId);
+        }
+        appointmentRepository.deleteById(appointmentId);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @Override
+    public AppointmentResponseDto updateAppointmentById(int appointmentId) {
+        return null;
     }
 }

@@ -1,6 +1,7 @@
 package com.example.module2.advices;
 
 import com.example.module2.exceptions.appointments.AppointmentAlreadyMadeForChosenHourAndActivityException;
+import com.example.module2.exceptions.appointments.AppointmentNotFoundException;
 import com.example.module2.exceptions.appointments.InvalidAppointmentTimeException;
 import com.example.module2.exceptions.appointments.UserAlreadyBusyInThisPeriodOfTimeException;
 import com.example.module2.exceptions.users.UserNotFoundException;
@@ -48,5 +49,16 @@ public class AppointmentControllerAdvice {
         body.put("message", ex.getMessage());
 
         return new ResponseEntity<>(body, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(AppointmentNotFoundException.class)
+    public ResponseEntity<Object> handleAppointmentNotFoundWithId(
+            AppointmentNotFoundException ex) {
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", ex.getMessage());
+
+        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
     }
 }
