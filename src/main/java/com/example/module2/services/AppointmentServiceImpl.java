@@ -111,6 +111,6 @@ public class AppointmentServiceImpl implements AppointmentService{
 
     @Override
     public AppointmentResponseDto updateAppointmentById(int appointmentId) {
-        return null;
+        return new AppointmentResponseDto();
     }
 }
