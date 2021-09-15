@@ -41,7 +41,7 @@ public class AppointmentController {
     }
 
     @PutMapping("/{appointmentId}")
-    public AppointmentResponseDto updateAppointmentById(@PathVariable int appointmentId) {
-        return appointmentService.updateAppointmentById(appointmentId);
+    public AppointmentResponseDto updateAppointmentById(@PathVariable int appointmentId, @RequestBody AppointmentRequestDto appointmentRequestDto) {
+        return appointmentService.updateAppointmentById(appointmentId, appointmentRequestDto);
     }
 }

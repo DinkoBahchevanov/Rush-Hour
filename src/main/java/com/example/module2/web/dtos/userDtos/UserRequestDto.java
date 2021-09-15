@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
+import javax.xml.transform.Source;
 import java.util.List;
 
 @AllArgsConstructor
@@ -20,6 +21,16 @@ public class UserRequestDto {
 
     private List<Role> roles;
 
+    public UserRequestDto(String firstName, String lastName, String email, String password) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.password = password;
+    }
+
+    public UserRequestDto() {
+
+    }
     @NotBlank(message = "First name is mandatory")
     @Size(min = 3, message = "First name must be at least 3 symbols long")
     public String getFirstName() {

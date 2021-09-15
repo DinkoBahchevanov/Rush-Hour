@@ -16,5 +16,5 @@ public interface AppointmentService {
 
     ResponseEntity<HttpStatus> deleteAppointmentById(int appointmentId);
 
-    AppointmentResponseDto updateAppointmentById(int appointmentId);
+    AppointmentResponseDto updateAppointmentById(int appointmentId, AppointmentRequestDto requestDto);
 }

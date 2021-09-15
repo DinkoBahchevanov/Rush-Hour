@@ -1,5 +1,7 @@
 package com.example.module2.web.dtos.appointmentDtos;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDateTime;
 
 public class AppointmentRequestDto {
@@ -16,9 +18,15 @@ public class AppointmentRequestDto {
         this.activityName = activityName;
     }
 
+    public AppointmentRequestDto(LocalDateTime startDateAndTime, String userEmail) {
+        this.startDateAndTime = startDateAndTime;
+        this.userEmail = userEmail;
+    }
+
     public AppointmentRequestDto() {
     }
 
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm")
     public LocalDateTime getStartDateAndTime() {
         return startDateAndTime;
     }

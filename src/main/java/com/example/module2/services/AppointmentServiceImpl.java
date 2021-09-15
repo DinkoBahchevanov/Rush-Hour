@@ -20,10 +20,11 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
-public class AppointmentServiceImpl implements AppointmentService{
+public class AppointmentServiceImpl implements AppointmentService {
 
     private final AppointmentRepository appointmentRepository;
     private final UserRepository userRepository;
@@ -47,9 +48,9 @@ public class AppointmentServiceImpl implements AppointmentService{
         if (appointmentRepository.findAppointmentByStartDateAndTimeAndActivityName(
                 appointmentRequestDto.getStartDateAndTime(), appointmentRequestDto.getActivityName()) != null) {
             throw new AppointmentAlreadyMadeForChosenHourAndActivityException(
-                    appointmentRequestDto.getStartDateAndTime(),  appointmentRequestDto.getActivityName());
+                    appointmentRequestDto.getStartDateAndTime(), appointmentRequestDto.getActivityName());
         }
-        if (appointmentRequestDto.getStartDateAndTime().isBefore(LocalDateTime.now())){
+        if (appointmentRequestDto.getStartDateAndTime().isBefore(LocalDateTime.now())) {
             throw new InvalidAppointmentTimeException(appointmentRequestDto.getStartDateAndTime(), LocalDateTime.now());
         }
         appointment.setStartDateAndTime(appointmentRequestDto.getStartDateAndTime());
@@ -61,7 +62,7 @@ public class AppointmentServiceImpl implements AppointmentService{
         appointment.setUser(userRepository.findByEmail(appointmentRequestDto.getUserEmail()));
 
         for ( Appointment loggedUserAppointment : loggedUser.getAppointments() ) {
-            if (appointment.getStartDateAndTime().isAfter(loggedUserAppointment.getStartDateAndTime()) &&
+            if (appointment.getStartDateAndTime().isAfter(loggedUserAppointment.getStartDateAndTime().minusMinutes(1)) &&
                     appointment.getStartDateAndTime().isBefore(loggedUserAppointment.getEndDateAndTime())) {
                 throw new UserAlreadyBusyInThisPeriodOfTimeException(appointmentRequestDto.getUserEmail(), appointmentRequestDto.getStartDateAndTime());
             }
@@ -110,7 +111,37 @@ public class AppointmentServiceImpl implements AppointmentService{
     }
 
     @Override
-    public AppointmentResponseDto updateAppointmentById(int appointmentId) {
-        return new AppointmentResponseDto();
+    public AppointmentResponseDto updateAppointmentById(int appointmentId, AppointmentRequestDto requestDto) {
+        Optional<Appointment> appointment = appointmentRepository.findById(appointmentId);
+        Appointment alreadyHasApp = appointmentRepository.findAppointmentByStartDateAndTimeAndActivityName(
+                requestDto.getStartDateAndTime(), requestDto.getActivityName());
+        if (alreadyHasApp != null) {
+            throw new AppointmentAlreadyMadeForChosenHourAndActivityException(
+                    requestDto.getStartDateAndTime(), requestDto.getActivityName());
+        }
+
+        if (!appointment.isPresent()) {
+            throw new AppointmentNotFoundException(appointmentId);
+        }
+        if (requestDto.getStartDateAndTime().isBefore(LocalDateTime.now())) {
+            throw new InvalidAppointmentTimeException(requestDto.getStartDateAndTime(), LocalDateTime.now());
+        }
+
+        Appointment appointmentByStartDateAndTime =
+                appointmentRepository.findAppointmentByStartDateAndTimeBetween(requestDto.getStartDateAndTime());
+        if (appointmentByStartDateAndTime != null) {
+            if (appointmentByStartDateAndTime.getUser().getEmail().equals(requestDto.getUserEmail())) {
+                throw new UserAlreadyBusyInThisPeriodOfTimeException(requestDto.getUserEmail(), requestDto.getStartDateAndTime());
+            }
+        }
+        double duration = appointment.get().getActivities().stream().filter(
+                activity -> activity.getName().contains(requestDto.getActivityName())).findFirst().get().getDuration();
+        appointment.get().setEndDateAndTime(appointment.get().getStartDateAndTime().plusHours((long) duration));
+
+//        appointment.get().getActivities().add(activityRepository.findByName(requestDto.getActivityName()));
+//        appointment.get().setUser(userRepository.findByEmail(requestDto.getUserEmail()));
+
+        return appointmentMapper.mapAppointmentToAppointmentResponseDto(
+                appointmentRepository.save(appointment.get()));
     }
 }

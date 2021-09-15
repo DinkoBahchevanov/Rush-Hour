@@ -2,6 +2,7 @@ package com.example.module2.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,7 +13,6 @@ import java.util.Set;
 
 @Entity
 @Table(name = "users")
-@NoArgsConstructor
 @AllArgsConstructor
 public class User extends BaseEntity {
 
@@ -22,6 +22,17 @@ public class User extends BaseEntity {
     private String password;
     private Set<Role> roles;
     private Set<Appointment> appointments;
+
+    public User(String firstName, String lastName, String email, String password) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.password = password;
+    }
+
+    public User() {
+
+    }
 
     @Column
     public String getFirstName() {
