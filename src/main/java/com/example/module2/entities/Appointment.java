@@ -7,7 +7,6 @@ import java.util.Set;
 @Entity
 @Table(name = "appointments")
 public class Appointment extends BaseEntity {
-
     private LocalDateTime startDateAndTime;
     private LocalDateTime endDateAndTime;
     private User user;
@@ -66,11 +65,5 @@ public class Appointment extends BaseEntity {
 
     public void setActivities(Set<Activity> activities) {
         this.activities = activities;
-    }
-
-    @Override
-    @Column(name = "appointment_id")
-    public int getId() {
-        return super.getId();
     }
 }

@@ -1,6 +1,5 @@
-package com.example.module2.exceptions.appointments;
+package com.example.module2.exceptions.appoinmtments;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class AppointmentAlreadyMadeForChosenHourAndActivityException extends RuntimeException {

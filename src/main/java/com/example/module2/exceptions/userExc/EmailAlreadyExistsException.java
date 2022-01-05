@@ -1,4 +1,4 @@
-package com.example.module2.exceptions.users;
+package com.example.module2.exceptions.userExc;
 
 public class EmailAlreadyExistsException extends RuntimeException {
 

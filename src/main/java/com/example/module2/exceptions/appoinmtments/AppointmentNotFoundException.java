@@ -1,6 +1,4 @@
-package com.example.module2.exceptions.appointments;
-
-import java.time.LocalDateTime;
+package com.example.module2.exceptions.appoinmtments;
 
 public class AppointmentNotFoundException extends RuntimeException {
 

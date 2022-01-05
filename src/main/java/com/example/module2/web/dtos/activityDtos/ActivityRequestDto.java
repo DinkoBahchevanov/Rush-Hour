@@ -1,7 +1,5 @@
 package com.example.module2.web.dtos.activityDtos;
 
-import javax.validation.constraints.NotBlank;
-
 public class ActivityRequestDto {
 
     private String name;
@@ -17,7 +15,6 @@ public class ActivityRequestDto {
     public ActivityRequestDto() {
     }
 
-    @NotBlank(message = "Name is mandatory")
     public String getName() {
         return name;
     }

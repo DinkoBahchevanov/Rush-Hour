@@ -28,33 +28,21 @@ public class ActivityController {
 
     @GetMapping
     public Set<ActivityResponseDto> getAllActivities() {
-        return activityService.getAllActivities();
+        return activityService.getAll();
     }
 
     @PostMapping
     public ActivityResponseDto createActivity(@Valid @RequestBody ActivityRequestDto activityRequestDto) {
-        return activityService.createActivity(activityRequestDto);
+        return activityService.create(activityRequestDto);
     }
 
     @DeleteMapping("/{id}")
     ResponseEntity<HttpStatus> deleteActivity(@PathVariable("id") int activityId) {
-        return activityService.deleteActivityById(activityId);
+        return activityService.delete(activityId);
     }
 
     @PutMapping("/{id}")
     ActivityResponseDto updateActivity(@PathVariable("id") int activityId, @RequestBody ActivityRequestDto activityRequestDto) {
-        return activityService.updateActivityById(activityId, activityRequestDto);
-    }
-
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Map<String, String> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
-        return errors;
+        return activityService.update(activityId, activityRequestDto);
     }
 }

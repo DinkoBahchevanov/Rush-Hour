@@ -3,11 +3,10 @@ package com.example.module2.web.dtos.userDtos;
 import com.example.module2.entities.Role;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
-
+import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
-import javax.xml.transform.Source;
+
 import java.util.List;
 
 @AllArgsConstructor
@@ -21,16 +20,6 @@ public class UserRequestDto {
 
     private List<Role> roles;
 
-    public UserRequestDto(String firstName, String lastName, String email, String password) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.password = password;
-    }
-
-    public UserRequestDto() {
-
-    }
     @NotBlank(message = "First name is mandatory")
     @Size(min = 3, message = "First name must be at least 3 symbols long")
     public String getFirstName() {
@@ -51,13 +40,7 @@ public class UserRequestDto {
         this.lastName = lastName;
     }
 
-    @NotBlank(message = "Email is mandatory")
-    @Pattern(message = "Invalid email",
-            regexp = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)" +
-                    "*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")" +
-                    "@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.)" +
-                    "{3}(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\" +
-                    "[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])")
+    @Email
     public String getEmail() {
         return email;
     }

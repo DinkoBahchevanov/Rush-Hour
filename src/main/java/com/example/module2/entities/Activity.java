@@ -8,8 +8,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "activities")
-public class Activity extends BaseEntity {
-
+public class Activity extends BaseEntity{
     private String name;
     private double duration;
     private double price;
@@ -62,9 +61,4 @@ public class Activity extends BaseEntity {
         this.appointments = appointments;
     }
 
-    @Override
-    @Column(name = "activity_id")
-    public int getId() {
-        return super.getId();
-    }
 }

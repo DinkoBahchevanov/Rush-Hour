@@ -1,6 +1,5 @@
 package com.example.module2.services;
 
-import com.example.module2.entities.Appointment;
 import com.example.module2.web.dtos.appointmentDtos.AppointmentRequestDto;
 import com.example.module2.web.dtos.appointmentDtos.AppointmentResponseDto;
 import org.springframework.http.HttpStatus;
@@ -10,11 +9,11 @@ import java.util.Set;
 
 public interface AppointmentService {
 
-    AppointmentResponseDto createAppointment(AppointmentRequestDto appointmentRequestDto, String loggedInUserEmail);
+    AppointmentResponseDto create(AppointmentRequestDto appointmentRequestDto, String loggedInUserEmail);
 
-    Set<AppointmentResponseDto> getAllAppointments();
+    Set<AppointmentResponseDto> getAll();
 
-    ResponseEntity<HttpStatus> deleteAppointmentById(int appointmentId);
+    ResponseEntity<HttpStatus> delete(int appointmentId);
 
-    AppointmentResponseDto updateAppointmentById(int appointmentId, AppointmentRequestDto requestDto);
+    AppointmentResponseDto update(int appointmentId, AppointmentRequestDto requestDto);
 }

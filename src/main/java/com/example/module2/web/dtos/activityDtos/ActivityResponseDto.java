@@ -1,6 +1,7 @@
 package com.example.module2.web.dtos.activityDtos;
 
 public class ActivityResponseDto {
+
     private String name;
     private double duration;
     private double price;

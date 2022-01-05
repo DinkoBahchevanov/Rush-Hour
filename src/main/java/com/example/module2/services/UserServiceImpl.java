@@ -1,9 +1,9 @@
 package com.example.module2.services;
 
 import com.example.module2.entities.Role;
-import com.example.module2.exceptions.users.AccessDeniedException;
-import com.example.module2.exceptions.users.EmailAlreadyExistsException;
-import com.example.module2.exceptions.users.UserNotFoundException;
+import com.example.module2.exceptions.userExc.AccessDeniedException;
+import com.example.module2.exceptions.userExc.EmailAlreadyExistsException;
+import com.example.module2.exceptions.userExc.UserNotFoundByIdException;
 import com.example.module2.web.dtos.userDtos.UserRequestDto;
 import com.example.module2.web.dtos.userDtos.UserResponseDto;
 import com.example.module2.web.dtos.userDtos.UserMapper;
@@ -12,6 +12,7 @@ import com.example.module2.repositories.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -53,7 +54,11 @@ public class UserServiceImpl implements UserService {
             user.getRoles().add(role);
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
+        try {
+            userRepository.save(user);
+        }catch (DataIntegrityViolationException exception) {
+            throw new EmailAlreadyExistsException(user.getEmail());
+        }
         return userMapper.mapUserToUserDto(user);
     }
 
@@ -64,36 +69,33 @@ public class UserServiceImpl implements UserService {
             return new ResponseEntity<>(HttpStatus.OK);
         }
         LOGGER.error(String.format("User with ID: %d - not found", id));
-        throw new UserNotFoundException(id);
+        throw new UserNotFoundByIdException(id);
     }
 
     @Override
-    public UserResponseDto updateUserById(int userId, String currentUserEmail, UserRequestDto userDto) throws UserNotFoundException {
+    public UserResponseDto updateUserById(int userId, String currentUserEmail, UserRequestDto userDto) throws UserNotFoundByIdException {
         Optional<User> user = userRepository.findById(userId);
         User uniqueUser = userRepository.findByEmail(userDto.getEmail());
         User changer = userRepository.findByEmail(currentUserEmail);
 
         if (!user.isPresent()) {
-            LOGGER.error(String.format("User with ID: %d - not found", userId));
-            throw new UserNotFoundException(userId);
+            throw new UserNotFoundByIdException(userId);
         }
 
         if (uniqueUser != null) {
-            LOGGER.error(String.format("Email %s already exists", userDto.getEmail()));
             throw new EmailAlreadyExistsException(userDto.getEmail());
         }
 
         if (changer.getRoles().stream().noneMatch(role -> role.getName().contains("ROLE_ADMIN"))
                 && user.get().getRoles().stream().anyMatch(role -> role.getName().contains("ROLE_ADMIN"))) {
-            LOGGER.error(String.format("Not enough rights for the user with id: %d", changer.getId()));
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(changer.getId());
         }
 
         if (changer.getRoles().stream().noneMatch(role -> role.getName().contains("ROLE_ADMIN"))
                 && user.get().getRoles().stream().noneMatch(role -> role.getName().contains("ROLE_ADMIN")) && changer.getId() != userId) {
-            LOGGER.error(String.format("Not enough rights for the user with id: %d", changer.getId()));
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(changer.getId());
         }
+        userDto.setRoles(new ArrayList<>(user.get().getRoles()));
         user = Optional.ofNullable(userMapper.mapUserDtoToUser(userDto));
         user.get().setId(userId);
         user.get().setPassword(passwordEncoder.encode(user.get().getPassword()));
@@ -108,21 +110,26 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserResponseDto registerUser(UserRequestDto createUserDto) {
         User user = userMapper.mapUserDtoToUser(createUserDto);
+
         user.setRoles(Set.of(roleService.getRoleByName("ROLE_USER")));
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        userRepository.save(user);
+        try {
+            userRepository.save(user);
+        }catch (DataIntegrityViolationException exception) {
+            throw new EmailAlreadyExistsException(user.getEmail());
+        }
         return userMapper.mapUserToUserDto(user);
     }
 
     @Override
     public void seedAdminToDB() {
-        User user = new User();
-        user.setFirstName("Dinko");
-        user.setLastName("Bahchevanov");
-        user.setEmail("dinko@abv.bg");
-        user.setPassword(passwordEncoder.encode("1234"));
-        user.setRoles(roleService.getAllRoles());
-        userRepository.save(user);
+            User user = new User();
+            user.setFirstName("Dinko");
+            user.setLastName("Bahchevanov");
+            user.setEmail("dinko@abv.bg");
+            user.setPassword(passwordEncoder.encode("1234"));
+            user.setRoles(roleService.getAllRoles());
+            userRepository.save(user);
     }
 }

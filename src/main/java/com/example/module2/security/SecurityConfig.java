@@ -7,7 +7,6 @@ import com.example.module2.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -20,23 +19,13 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import static org.springframework.http.HttpMethod.*;
 import static org.springframework.security.config.http.SessionCreationPolicy.*;
 
-
-//@EnableGlobalMethodSecurity(
-//        securedEnabled = true,
-//        jsr250Enabled = true,
-//        prePostEnabled = true
-//)
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-    @Autowired
     private UserDetailsService userDetailsService;
-    @Autowired
     private UserService userService;
-    @Autowired
     private RoleService roleService;
-    @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Override
@@ -46,17 +35,22 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        CustomAuthenticationFilter customAuthenticationFilter = new CustomAuthenticationFilter(authenticationManagerBean(), userService, roleService);
+        CustomAuthenticationFilter customAuthenticationFilter = new
+                CustomAuthenticationFilter(authenticationManagerBean(), userService, roleService);
         customAuthenticationFilter.setFilterProcessesUrl("/api/authenticate");
         http.csrf().disable();
         http.sessionManagement().sessionCreationPolicy(STATELESS);
-        http.authorizeRequests().antMatchers(POST, "/api/users","/api/authenticate").permitAll();
-        http.authorizeRequests().antMatchers(POST, "/api/appointments").permitAll();
+        http.authorizeRequests().antMatchers(POST, "/api/authenticate").permitAll();
+        http.authorizeRequests().antMatchers(POST, "/api/users").hasAuthority("ROLE_ADMIN");
+        http.authorizeRequests().antMatchers(POST, "/api/users/register").permitAll();
         http.authorizeRequests().antMatchers(GET, "/api/users").hasAuthority("ROLE_ADMIN");
         http.authorizeRequests().antMatchers(DELETE, "/api/users").hasAuthority("ROLE_ADMIN");
         http.authorizeRequests().antMatchers("/api/users/**").authenticated();
-        http.authorizeRequests().antMatchers(POST,"/api/activities/**").authenticated();
         http.authorizeRequests().antMatchers("/api/activities/**").hasAuthority("ROLE_ADMIN");
+        http.authorizeRequests().antMatchers(POST, "/api/appointments/").hasAuthority("ROLE_USER");
+        http.authorizeRequests().antMatchers(GET, "/api/appointments/**").hasAuthority("ROLE_ADMIN");
+        http.authorizeRequests().antMatchers(PUT, "/api/appointments/**").hasAuthority("ROLE_ADMIN");
+        http.authorizeRequests().antMatchers(DELETE, "/api/appointments/**").hasAuthority("ROLE_ADMIN");
         http.addFilter(customAuthenticationFilter);
         http.addFilterBefore(new CustomAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
     }
@@ -65,5 +59,30 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public AuthenticationManager authenticationManagerBean() throws Exception {
         return super.authenticationManagerBean();
+    }
+
+    @Bean
+    public BCryptPasswordEncoder bCryptPasswordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Autowired
+    public void setRoleService(RoleService roleService) {
+        this.roleService = roleService;
+    }
+
+    @Autowired
+    public void setUserService(UserService userService) {
+        this.userService = userService;
+    }
+
+    @Autowired
+    public void setbCryptPasswordEncoder(BCryptPasswordEncoder bCryptPasswordEncoder) {
+        this.bCryptPasswordEncoder = bCryptPasswordEncoder;
+    }
+
+    @Autowired
+    public void setUserDetailsService(UserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
     }
 }

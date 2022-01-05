@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -41,10 +40,9 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public UserResponseDto updateUserById(@PathVariable("id") int userId, @Valid @RequestBody UserRequestDto userDto) {
-        Authentication loggedInUser = SecurityContextHolder.getContext().getAuthentication();
+    public UserResponseDto updateUserById(@PathVariable("id") int param, @Valid @RequestBody UserRequestDto userDto,Authentication loggedInUser) {
         String email = loggedInUser.getName();
-        return userService.updateUserById(userId, email, userDto);
+        return userService.updateUserById(param, email, userDto);
     }
 
     @PostMapping("/register")

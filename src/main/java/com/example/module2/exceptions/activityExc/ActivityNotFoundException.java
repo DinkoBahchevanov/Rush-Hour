@@ -1,4 +1,4 @@
-package com.example.module2.exceptions.activities;
+package com.example.module2.exceptions.activityExc;
 
 public class ActivityNotFoundException extends RuntimeException {
 

@@ -1,10 +1,8 @@
 package com.example.module2.web.controllers;
 
-import com.example.module2.entities.Appointment;
 import com.example.module2.services.AppointmentService;
 import com.example.module2.web.dtos.appointmentDtos.AppointmentRequestDto;
 import com.example.module2.web.dtos.appointmentDtos.AppointmentResponseDto;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,21 +25,21 @@ public class AppointmentController {
     @PostMapping
     public AppointmentResponseDto createAppointment(@RequestBody AppointmentRequestDto appointmentRequestDto
             , Authentication authentication) {
-        return appointmentService.createAppointment(appointmentRequestDto, authentication.getName());
+        return appointmentService.create(appointmentRequestDto, authentication.getName());
     }
 
     @GetMapping
     public Set<AppointmentResponseDto> getAllAppointments() {
-        return appointmentService.getAllAppointments();
+        return appointmentService.getAll();
     }
 
     @DeleteMapping("/{appointmentId}")
     public ResponseEntity<HttpStatus> deleteAppointmentById(@PathVariable int appointmentId) {
-        return appointmentService.deleteAppointmentById(appointmentId);
+        return appointmentService.delete(appointmentId);
     }
 
     @PutMapping("/{appointmentId}")
     public AppointmentResponseDto updateAppointmentById(@PathVariable int appointmentId, @RequestBody AppointmentRequestDto appointmentRequestDto) {
-        return appointmentService.updateAppointmentById(appointmentId, appointmentRequestDto);
+        return appointmentService.update(appointmentId, appointmentRequestDto);
     }
 }

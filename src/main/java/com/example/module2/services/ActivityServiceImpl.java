@@ -1,26 +1,25 @@
 package com.example.module2.services;
 
 import com.example.module2.entities.Activity;
-import com.example.module2.exceptions.activities.ActivityAlreadyExistsException;
-import com.example.module2.exceptions.activities.ActivityNotFoundException;
+import com.example.module2.exceptions.activityExc.ActivityNotFoundException;
 import com.example.module2.repositories.ActivityRepository;
 import com.example.module2.web.dtos.activityDtos.ActivityMapper;
 import com.example.module2.web.dtos.activityDtos.ActivityRequestDto;
 import com.example.module2.web.dtos.activityDtos.ActivityResponseDto;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
 
-import javax.validation.ConstraintViolationException;
-import java.sql.SQLIntegrityConstraintViolationException;
+import javax.validation.Valid;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 @Service
-public class ActivityServiceImpl implements ActivityService {
+public class ActivityServiceImpl implements ActivityService{
 
     public final ActivityRepository activityRepository;
     public final ActivityMapper activityMapper;
@@ -31,15 +30,13 @@ public class ActivityServiceImpl implements ActivityService {
     }
 
     @Override
-    public ActivityResponseDto createActivity(ActivityRequestDto activityRequestDto) {
+    public ActivityResponseDto create(@Valid @RequestBody ActivityRequestDto activityRequestDto) {
         Activity activity = activityMapper.mapActivityDtoToActivity(activityRequestDto);
-        activityRepository.save(activity);
-
-        return activityMapper.mapActivityToActivityResponseDto(activity);
+        return activityMapper.mapActivityToActivityResponseDto(activityRepository.save(activity));
     }
 
     @Override
-    public ResponseEntity<HttpStatus> deleteActivityById(int activityId) {
+    public ResponseEntity<HttpStatus> delete(int activityId) {
         if (!activityRepository.findById(activityId).isPresent()){
             throw new ActivityNotFoundException(activityId);
         }
@@ -48,23 +45,21 @@ public class ActivityServiceImpl implements ActivityService {
     }
 
     @Override
-    public Set<ActivityResponseDto> getAllActivities() {
+    public Set<ActivityResponseDto> getAll() {
         List<ActivityResponseDto> activityResponseDtos = activityMapper
                 .mapActivityListToActivityResponseDtoList(activityRepository.findAll());
         return new HashSet<>(activityResponseDtos);
     }
 
     @Override
-    public ActivityResponseDto updateActivityById(int activityId, ActivityRequestDto activityRequestDto) {
-        Activity activity = activityRepository.getById(activityId);
-        if (activity.getName() == null) {
+    public ActivityResponseDto update(int activityId, @Valid @RequestBody ActivityRequestDto activityRequestDto) {
+        Optional<Activity> activity = activityRepository.findById(activityId);
+        if (!activity.isPresent()) {
             throw new ActivityNotFoundException(activityId);
         }
-        activity = activityMapper.mapActivityDtoToActivity(activityRequestDto);
-        activity.setId(activityId);
-//        activity.setName(activityRequestDto.getName());
-//        activity.setDuration(activityRequestDto.getDuration());
-//        activity.setPrice(activityRequestDto.getPrice());
-        return activityMapper.mapActivityToActivityResponseDto(activityRepository.save(activity));
+        Activity updatedActivity = activityMapper.mapActivityDtoToActivity(activityRequestDto);
+        updatedActivity.setId(activityId);
+
+        return activityMapper.mapActivityToActivityResponseDto(activityRepository.save(updatedActivity));
     }
 }

@@ -4,7 +4,6 @@ import com.example.module2.entities.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
-
 import java.util.List;
 
 @Mapper(componentModel = "spring")
@@ -15,7 +14,7 @@ public interface UserMapper {
             @Mapping(target="lastName", source="userRequestDto.lastName"),
             @Mapping(target="email", source="userRequestDto.email"),
             @Mapping(target="password", source="userRequestDto.password"),
-            @Mapping(target = "roles", source = "userRequestDto.roles")
+            @Mapping(target = "roles")
     })
     User mapUserDtoToUser(UserRequestDto userRequestDto);
 

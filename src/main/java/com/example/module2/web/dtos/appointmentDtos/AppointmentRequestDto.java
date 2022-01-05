@@ -2,20 +2,22 @@ package com.example.module2.web.dtos.appointmentDtos;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import java.awt.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 public class AppointmentRequestDto {
 
     private LocalDateTime startDateAndTime;
     private LocalDateTime endDateAndTime;
     private String userEmail;
-    private String activityName;
+    private ArrayList<String> activityNames;
 
-    public AppointmentRequestDto(LocalDateTime startDateAndTime, LocalDateTime endDateAndTime, String userEmail, String activityName) {
+    public AppointmentRequestDto(LocalDateTime startDateAndTime, LocalDateTime endDateAndTime, String userEmail, ArrayList<String> activityNames) {
         this.startDateAndTime = startDateAndTime;
         this.endDateAndTime = endDateAndTime;
         this.userEmail = userEmail;
-        this.activityName = activityName;
+        this.activityNames = activityNames;
     }
 
     public AppointmentRequestDto(LocalDateTime startDateAndTime, String userEmail) {
@@ -51,11 +53,11 @@ public class AppointmentRequestDto {
         this.userEmail = userEmail;
     }
 
-    public String getActivityName() {
-        return activityName;
+    public ArrayList<String> getActivityNames() {
+        return activityNames;
     }
 
-    public void setActivityName(String activityName) {
-        this.activityName = activityName;
+    public void setActivityNames(ArrayList<String> activityNames) {
+        this.activityNames = activityNames;
     }
 }

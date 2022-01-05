@@ -2,6 +2,7 @@ package com.example.module2.filters;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.example.module2.entities.Role;
 import com.example.module2.services.RoleService;
 import com.example.module2.services.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -39,7 +40,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         String email = request.getParameter("username");
         String password = request.getParameter("password");
-
+        
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(email, password);
         return authenticationManager.authenticate(authenticationToken);
     }
@@ -50,8 +51,6 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         User user = (User) authentication.getPrincipal();
 
         com.example.module2.entities.User currentUserWithRoles = userService.getUserByEmail(user.getUsername());
-//        Set<Role> rolesOfTheCurrentUser = roleService.getRolesByUserEmail(user.getUsername());
-//        currentUserWithRoles.setRoles(rolesOfTheCurrentUser);
 
         Algorithm algorithm = Algorithm.HMAC256("secret".getBytes());
 
